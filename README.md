@@ -1,0 +1,8 @@
+# PigCore Game Prototype
+This project was set up to test and validate the folder/file structure for a video game project based on [PigCore](https://github.com/PiggybankStudios/PigCore)
+
+## Goals
+1. We want the core repository to live entirely inside the `core/` folder. I like the idea that the core layers are a tool, not a framework, so rather than the game repository living inside the core folder structure, the core folder structure lives inside the game repository.
+2. Figure out how much we want to be able to enable/disble from build_config.h. Between games we may want to use different third_party libraries or frameworks but within a single game we don't really need a quick way to switch off these frameworks so the assumption should be baked into the build.bat.
+3. Is there a sensible way to share some code between the PigCore build.bat/build_config.h and the game's build.bat/build_config.h? It's possible the answer is no and we'll just commit to copying the PigCore build.bat (or a previous project) whenever we make a new game, and we maintain each build.bat for each project separately.
+4. Figure out how resources should be managed so that the game can be easily run after building and have access to all the resources as if it was a packaged/shipped build. Since PigCore may have some resources that it relies on, we may need some way to automatically pull those resources out of the core folder and into our `_data` folder. Or maybe we need the game to handle checking two folders for it's resources?
