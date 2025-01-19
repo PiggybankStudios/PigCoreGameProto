@@ -17,9 +17,7 @@ Description:
 // Build .exe binaries for Windows platform
 #define BUILD_WINDOWS 1
 // Build binaries for Linux platform(s)
-#define BUILD_LINUX   1
-// Build the WASM binary for operating as a webpage
-#define BUILD_WEB     1
+#define BUILD_LINUX   0
 
 // Controls whether we are making a build that we want to run with a Debugger.
 // This often sacrifices runtime speed or code size for extra debug information.
@@ -34,7 +32,7 @@ Description:
 // Compiles game/main.c
 #define BUILD_GAME   1
 // Runs the result of compiling game/main.c, aka the game.exe
-#define RUN_GAME     1
+#define RUN_GAME     0
 
 // Rather than compiling the project(s) it will simply output the
 // result of the preprocessor's pass over the code to the build folder

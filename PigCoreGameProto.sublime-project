@@ -90,5 +90,24 @@
 				"README.md",
 			],
 		},
-	]
+	],
+	"settings":
+	{
+		"build_options":
+		[
+		],
+		"custom_constants":
+		[
+		],
+		"custom_functions":
+		[
+			"Result TryParseImageFile(Slice fileContents, Arena* arena, ImageData* imageDataOut)"
+		],
+		"custom_globals":
+		[
+		],
+		"custom_types":
+		[
+		]
+	},
 }

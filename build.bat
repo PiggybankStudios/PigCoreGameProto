@@ -24,7 +24,6 @@ for /f "delims=" %%i in ('%extract_define% RUN_GAME') do set RUN_GAME=%%i
 for /f "delims=" %%i in ('%extract_define% DUMP_PREPROCESSOR') do set DUMP_PREPROCESSOR=%%i
 for /f "delims=" %%i in ('%extract_define% BUILD_WINDOWS') do set BUILD_WINDOWS=%%i
 for /f "delims=" %%i in ('%extract_define% BUILD_LINUX') do set BUILD_LINUX=%%i
-for /f "delims=" %%i in ('%extract_define% BUILD_WEB') do set BUILD_WEB=%%i
 for /f "delims=" %%i in ('%extract_define% PROJECT_DLL_NAME') do set PROJECT_DLL_NAME=%%i
 for /f "delims=" %%i in ('%extract_define% PROJECT_EXE_NAME') do set PROJECT_EXE_NAME=%%i
 
@@ -81,12 +80,12 @@ set common_cl_flags=%common_cl_flags% /wd4130 /wd4201 /wd4324 /wd4458 /wd4505 /w
 :: -Wno-unused-function = unused function 'MeowExpandSeed'
 set common_clang_flags=%common_clang_flags% -Wno-switch -Wno-unused-function
 :: /I = Adds an include directory to search in when resolving #includes
-set common_cl_flags=%common_cl_flags% /I"%root%" /I"%core%"
+set common_cl_flags=%common_cl_flags% /I"%root%" /I"%game%" /I"%core%"
 :: -I = Add directory to the end of the list of include search paths
 :: -lm = Include the math library (required for stuff like sinf, atan, etc.)
 :: -mssse3 = For MeowHash to work we need sse3 support
 :: -maes = For MeowHash to work we need aes support
-set linux_clang_flags=-lm -I "../%root%" -I "../%core%" -mssse3 -maes
+set linux_clang_flags=-lm -I "../%root%" -I "../%game%" -I "../%core%" -mssse3 -maes
 if "%DEBUG_BUILD%"=="1" (
 	REM /MDd = ?
 	REM /Od = Optimization level: Debug
