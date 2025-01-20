@@ -9,7 +9,7 @@ Description:
 */
 
 #define PIG_CORE_IMPLEMENTATION 0
-#define BUILD_WITH_RAYLIB 1
+#define BUILD_WITH_RAYLIB 0
 
 #include "base/base_all.h"
 #include "std/std_all.h"
@@ -19,7 +19,9 @@ Description:
 #include "struct/struct_all.h"
 #include "gfx/gfx_all.h"
 
+#if BUILD_WITH_RAYLIB
 #include "third_party/raylib/raylib.h"
+#endif
 
 // +--------------------------------------------------------------+
 // |                           Globals                            |

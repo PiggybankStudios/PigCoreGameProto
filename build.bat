@@ -88,9 +88,10 @@ set common_clang_flags=%common_clang_flags% -Wno-switch -Wno-unused-function
 set common_cl_flags=%common_cl_flags% /I"%root%" /I"%game%" /I"%core%"
 :: -I = Add directory to the end of the list of include search paths
 :: -lm = Include the math library (required for stuff like sinf, atan, etc.)
+:: -ldl = Needed for dlopen and similar functions
 :: -mssse3 = For MeowHash to work we need sse3 support
 :: -maes = For MeowHash to work we need aes support
-set linux_clang_flags=-lm -I "../%root%" -I "../%game%" -I "../%core%" -mssse3 -maes
+set linux_clang_flags=-lm -ldl -L "." -I "../%root%" -I "../%game%" -I "../%core%" -mssse3 -maes
 if "%DEBUG_BUILD%"=="1" (
 	REM /MDd = ?
 	REM /Od = Optimization level: Debug
@@ -127,7 +128,7 @@ set common_ld_flags=-incremental:no
 :: Shlwapi.lib  = ?
 :: Ole32.lib    = Combaseapi.h, CoCreateInstance
 :: Advapi32.lib = Processthreadsapi.h, OpenProcessToken, GetTokenInformation
-set common_ld_flags=%common_ld_flags% raylibdll.lib gdi32.lib User32.lib Shell32.lib kernel32.lib winmm.lib
+rem set common_ld_flags=%common_ld_flags% raylibdll.lib gdi32.lib User32.lib Shell32.lib kernel32.lib winmm.lib
 :: TODO:: Compiling for Linux with raylib would require following instructions here: https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux
 
 if "%DEBUG_BUILD%"=="1" (
@@ -135,6 +136,8 @@ if "%DEBUG_BUILD%"=="1" (
 ) else (
 	set common_ld_flags=%common_ld_flags% /LIBPATH:"%root%\third_party\_lib_release" /LIBPATH:"%core%\third_party\_lib_release"
 )
+
+set pig_core_defines=/DBUILD_WITH_RAYLIB=1
 
 if "%DUMP_PREPROCESSOR%"=="1" (
 	REM /P = Output the result of the preprocessor to {file_name}.i (disables the actual compilation)
@@ -154,40 +157,20 @@ for /F "tokens=1-4 delims=:.," %%a in ("%time%") do (
 :: /Fe = Set the output exe file name
 set piggen_source_path=%core%/piggen/piggen_main.c
 set piggen_exe_path=piggen.exe
-set piggen_bin_path=piggen
 set piggen_cl_args=%common_cl_flags% /Fe%piggen_exe_path% %piggen_source_path% /link %common_ld_flags%
-set piggen_clang_args=%common_clang_flags% %linux_clang_flags% -o %piggen_bin_path% ../%piggen_source_path%
 
 if "%BUILD_PIGGEN_IF_NEEDED%"=="1" (
-	if "%BUILD_WINDOWS%"=="1" (
-		if not exist %piggen_exe_path% (
-			set BUILD_PIGGEN=1
-		)
-	)
-	if "%BUILD_LINUX%"=="1" (
-		if not exist linux\%piggen_bin_path% (
-			set BUILD_PIGGEN=1
-		)
+	if not exist %piggen_exe_path% (
+		set BUILD_PIGGEN=1
 	)
 )
 
 if "%BUILD_PIGGEN%"=="1" (
-	if "%BUILD_WINDOWS%"=="1" (
-		echo.
-		echo [Building piggen for Windows...]
-		del %piggen_exe_path% > NUL 2> NUL
-		cl %piggen_cl_args%
-		echo [Built piggen for Windows!]
-	)
-	if "%BUILD_LINUX%"=="1" (
-		echo.
-		echo [Building piggen for Linux...]
-		if not exist linux mkdir linux
-		pushd linux
-		wsl clang-18 %piggen_clang_args%
-		popd
-		echo [Built piggen for Linux!]
-	)
+	echo.
+	echo [Building piggen...]
+	del %piggen_exe_path% > NUL 2> NUL
+	cl %piggen_cl_args%
+	echo [Built piggen!]
 )
 
 if "%RUN_PIGGEN%"=="1" (
@@ -204,8 +187,10 @@ set pig_core_source_path=%core%/dll/dll_main.c
 set pig_core_dll_path=pig_core.dll
 set pig_core_lib_path=pig_core.lib
 set pig_core_so_path=libpig_core.so
-set pig_core_cl_args=%common_cl_flags% /DBUILD_WITH_RAYLIB=1 /Fe%pig_core_dll_path% %pig_core_source_path% /link %common_ld_flags% /DLL
-set pig_core_clang_args=%common_clang_flags% %linux_clang_flags% -shared -o %pig_core_so_path% ../%pig_core_source_path%
+set pig_core_cl_args=%common_cl_flags% %pig_core_defines% /Fe%pig_core_dll_path% %pig_core_source_path% /link %common_ld_flags% /DLL
+:: -fPIC = "Position Independent Code" (Required for globals to work properly?)
+:: -shared = ?
+set pig_core_clang_args=%common_clang_flags% %linux_clang_flags% -fPIC -shared -o %pig_core_so_path% ../%pig_core_source_path%
 
 if "%BUILD_PIG_CORE_LIB_IF_NEEDED%"=="1" (
 	if "%BUILD_WINDOWS%"=="1" (
@@ -252,35 +237,36 @@ if "%BUILD_PIG_CORE_LIB%"=="1" (
 :: |                        Build game.exe                        |
 :: +--------------------------------------------------------------+
 set platform_source_path=%game%/platform_main.c
-set game_exe_path=%PROJECT_EXE_NAME%.exe
-set game_bin_path=%PROJECT_EXE_NAME%
-set game_cl_args=%common_cl_flags% /Fe%game_exe_path% %platform_source_path% /link %common_ld_flags% %pig_core_lib_path%
-set game_clang_args=%common_clang_flags% %linux_clang_flags% -o %game_bin_path% ../%game_source_path%
+set platform_exe_path=%PROJECT_EXE_NAME%.exe
+set platform_bin_path=%PROJECT_EXE_NAME%
+set platform_cl_args=%common_cl_flags% /Fe%platform_exe_path% %platform_source_path% /link %common_ld_flags% %pig_core_lib_path%
+:: -rpath = Add to RPATH so that libpig_core.so can be found in this folder (it doesn't need to be copied to any system folder)
+set platform_clang_args=%common_clang_flags% %linux_clang_flags% -lpig_core -rpath "." -o %platform_bin_path% ../%platform_source_path%
 
 if "%BUILD_GAME_EXE%"=="1" (
 	if "%BUILD_WINDOWS%"=="1" (
-		del %game_exe_path% > NUL 2> NUL
+		del %platform_exe_path% > NUL 2> NUL
 		
 		echo.
-		echo [Building %game_exe_path% for Windows...]
-		cl %game_cl_args%
-		echo [Built %game_exe_path% for Windows!]
+		echo [Building %platform_exe_path% for Windows...]
+		cl %platform_cl_args%
+		echo [Built %platform_exe_path% for Windows!]
 		
 		if "%COPY_TO_DATA_DIRECTORY%"=="1" (
-			COPY %game_exe_path% %root%\_data\%game_exe_path% > NUL
+			COPY %platform_exe_path% %root%\_data\%platform_exe_path% > NUL
 		)
 	)
 	if "%BUILD_LINUX%"=="1" (
 		echo.
-		echo [Building %game_bin_path% for Linux...]
+		echo [Building %platform_bin_path% for Linux...]
 		if not exist linux mkdir linux
 		pushd linux
 		
-		del %game_bin_path% > NUL 2> NUL
-		wsl clang-18 %game_clang_args%
+		del %platform_bin_path% > NUL 2> NUL
+		wsl clang-18 %platform_clang_args%
 		
 		popd
-		echo [Built %game_bin_path% for Linux!]
+		echo [Built %platform_bin_path% for Linux!]
 	)
 )
 
@@ -288,7 +274,7 @@ set game_source_path=%game%/game_main.c
 set game_dll_path=%PROJECT_DLL_NAME%.dll
 set game_so_path=%PROJECT_DLL_NAME%.so
 set game_dll_cl_args=%common_cl_flags% /Fe%game_dll_path% %game_source_path% /link %common_ld_flags% %pig_core_lib_path% /DLL
-set game_dll_clang_args=TODO: Fill this out!
+set game_dll_clang_args=%common_clang_flags% %linux_clang_flags% -shared -lpig_core  -o %game_so_path% ../%game_source_path%
 
 if "%BUILD_GAME_DLL%"=="1" (
 	if "%BUILD_WINDOWS%"=="1" (
@@ -336,8 +322,8 @@ echo Build took %build_elapsed_seconds_part%.%build_elapsed_hundredths_part% sec
 
 if "%RUN_GAME%"=="1" (
 	echo.
-	echo [%game_exe_path%]
-	%game_exe_path%
+	echo [%platform_exe_path%]
+	%platform_exe_path%
 )
 
 echo.

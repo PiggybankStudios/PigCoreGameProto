@@ -9,6 +9,7 @@ Description:
 // +--------------------------------------------------------------+
 // |                          Callbacks                           |
 // +--------------------------------------------------------------+
+#if BUILD_WITH_RAYLIB
 void RaylibLogCallback(int logLevel, const char* text, va_list args)
 {
 	DbgLevel dbgLevel;
@@ -53,3 +54,4 @@ void RaylibLogCallback(int logLevel, const char* text, va_list args)
 	}
 	ScratchEnd(scratch);
 }
+#endif //BUILD_WITH_RAYLIB

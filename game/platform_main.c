@@ -8,7 +8,7 @@ Description:
 */
 
 #define PIG_CORE_IMPLEMENTATION 0
-#define BUILD_WITH_RAYLIB 1
+#define BUILD_WITH_RAYLIB 0
 
 #include "base/base_all.h"
 #include "std/std_all.h"
@@ -18,7 +18,9 @@ Description:
 #include "struct/struct_all.h"
 #include "gfx/gfx_all.h"
 
+#if BUILD_WITH_RAYLIB
 #include "third_party/raylib/raylib.h"
+#endif
 
 // +--------------------------------------------------------------+
 // |                         Header Files                         |
@@ -47,6 +49,7 @@ int main()
 	
 	ScratchBegin(loadScratch);
 	
+	#if BUILD_WITH_RAYLIB
 	SetTraceLogCallback(RaylibLogCallback);
 	InitWindow(800, 600, PROJECT_READABLE_NAME_STR);
 	SetWindowMinSize(400, 200);
@@ -71,25 +74,38 @@ int main()
 	Texture2D checkerTexture = LoadTextureFromImage(checkerImage);
 	#endif
 	
+	#endif //BUILD_WITH_RAYLIB
+	
+	#if 1
 	OsDll gameDll;
+	#if TARGET_IS_WINDOWS
 	FilePath dllPath = StrLit(PROJECT_DLL_NAME_STR ".dll");
+	#elif TARGET_IS_LINUX
+	FilePath dllPath = StrLit("./" PROJECT_DLL_NAME_STR ".so");
+	#else
+	#error Current TARGET doesn't have an implementation for shared library suffix!
+	#endif
 	Result loadDllResult = OsLoadDll(dllPath, &gameDll);
 	if (loadDllResult != Result_Success) { PrintLine_E("Failed to load \"%.*s\": %s", StrPrint(dllPath), GetResultStr(loadDllResult)); }
 	Assert(loadDllResult == Result_Success);
 	PrintLine_D("handle = %p", gameDll.handle);
-	
-	
+	#else
+	WriteLine_D("Not loading game_hot_reload shared library (for now)");
+	#endif
 	
 	ScratchEnd(loadScratch);
 	
 	// +--------------------------------------------------------------+
 	// |                        Main Game Loop                        |
 	// +--------------------------------------------------------------+
+	#if BUILD_WITH_RAYLIB
 	while (!WindowShouldClose())
 	{
+		//Grab all scratch arenas so we can ensure they get reset at the end of each frame
 		ScratchBegin(scratch1);
 		ScratchBegin1(scratch2, scratch1);
 		ScratchBegin2(scratch3, scratch1, scratch2);
+		
 		int windowWidth = GetRenderWidth();
 		int windowHeight = GetRenderHeight();
 		BeginDrawing();
@@ -101,11 +117,14 @@ int main()
 		DrawTexture(checkerTexture, 10, 10, WHITE);
 		
 		EndDrawing();
+		
 		ScratchEnd(scratch1);
 		ScratchEnd(scratch2);
 		ScratchEnd(scratch3);
 	}
 	
 	CloseWindow();
+	#endif //BUILD_WITH_RAYLIB
+	
 	return 0;
 }
