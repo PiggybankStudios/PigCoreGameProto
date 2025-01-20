@@ -112,7 +112,7 @@ if "%DEBUG_BUILD%"=="1" (
 :: -incremental:no = Suppresses warning about doing a full link when it can't find the previous .exe result. We don't need this when doing unity builds
 :: /LIBPATH = Add a library search path
 set common_ld_flags=-incremental:no
-:: raylib.lib   = ?
+:: raylibdll.lib   = ?
 :: gdi32.lib    = ?
 :: User32.lib   = ?
 :: Shell32.lib  = Shlobj.h ? 
@@ -122,7 +122,7 @@ set common_ld_flags=-incremental:no
 :: Shlwapi.lib  = ?
 :: Ole32.lib    = Combaseapi.h, CoCreateInstance
 :: Advapi32.lib = Processthreadsapi.h, OpenProcessToken, GetTokenInformation
-set common_ld_flags=%common_ld_flags% raylib.lib gdi32.lib User32.lib Shell32.lib kernel32.lib winmm.lib
+set common_ld_flags=%common_ld_flags% raylibdll.lib gdi32.lib User32.lib Shell32.lib kernel32.lib winmm.lib
 :: TODO:: Compiling for Linux with raylib would require following instructions here: https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux
 
 if "%DEBUG_BUILD%"=="1" (
@@ -184,24 +184,28 @@ if "%RUN_PIGGEN%"=="1" (
 :: +--------------------------------------------------------------+
 :: |                        Build game.exe                        |
 :: +--------------------------------------------------------------+
-set game_source_path=%game%/main.c
+set platform_source_path=%game%/platform_main.c
+set game_source_path=%game%/game_main.c
 set game_exe_path=%PROJECT_EXE_NAME%.exe
+set game_dll_path=%PROJECT_DLL_NAME%.dll
 set game_bin_path=%PROJECT_EXE_NAME%
-set game_cl_args=%common_cl_flags% /Fe%game_exe_path% %game_source_path% /link %common_ld_flags%
+set game_cl_args=%common_cl_flags% /Fe%game_exe_path% %platform_source_path% /link %common_ld_flags%
+set game_dll_cl_args=%common_cl_flags% /Fe%game_dll_path% %game_source_path% /link %common_ld_flags% /DLL
 set game_clang_args=%common_clang_flags% %linux_clang_flags% -o %game_bin_path% ../%game_source_path%
+set game_dll_clang_args=TODO: Fill this out!
 	
 if "%BUILD_GAME%"=="1" (
 	if "%BUILD_WINDOWS%"=="1" (
+		del %game_exe_path% > NUL 2> NUL
+		del %game_dll_path% > NUL 2> NUL
+		
 		echo.
 		echo [Building %game_exe_path% for Windows...]
-		
-		del %game_exe_path% > NUL 2> NUL
 		cl %game_cl_args%
+		echo [Built %game_exe_path% for Windows!]
 		
-		if "%DUMP_PREPROCESSOR%"=="1" (
-			COPY main.i game_preprocessed.i > NUL
-		)
-		
+		echo [Building %game_dll_path% for Windows...]
+		cl %game_dll_cl_args%
 		echo [Built %game_exe_path% for Windows!]
 	)
 	if "%BUILD_LINUX%"=="1" (
@@ -212,6 +216,7 @@ if "%BUILD_GAME%"=="1" (
 		
 		del %game_bin_path% > NUL 2> NUL
 		wsl clang-18 %game_clang_args%
+		wsl clang-18 %game_dll_clang_args%
 		
 		popd
 		echo [Built %game_bin_path% for Linux!]

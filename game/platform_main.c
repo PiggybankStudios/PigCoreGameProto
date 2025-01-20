@@ -52,11 +52,15 @@ int main()
 	SetWindowState(FLAG_WINDOW_RESIZABLE);
 	SetTargetFPS(60);
 	
+	FilePath checkerFilePath = FilePathLit("resources/image/pig_checker_blue.png");
+	#if 1
+	Texture2D checkerTexture = LoadTexture(checkerFilePath.chars);
+	#else
 	Slice checkerImageFile = Str8_Empty;
-	if (!OsReadFile(FilePathLit("resources/image/pig_checker_blue.png"), loadScratch, false, &checkerImageFile)) { WriteLine_E("Failed to read pig_checker_blue.png texture!"); return 1; }
+	if (!OsReadFile(checkerFilePath, loadScratch, false, &checkerImageFile)) { PrintLine_E("Failed to read \"%.*s\" texture!", StrPrint(checkerFilePath)); return 1; }
 	ImageData checkerImageData;
 	Result loadImageResult = TryParseImageFile(checkerImageFile, stdHeap, &checkerImageData);
-	if (loadImageResult != Result_Success) { PrintLine_E("Failed to parse pig_checker_blue.png texture: %s", GetResultStr(loadImageResult)); return 1; }
+	if (loadImageResult != Result_Success) { PrintLine_E("Failed to parse \"%.*s\" texture: %s", StrPrint(checkerFilePath), GetResultStr(loadImageResult)); return 1; }
 	Image checkerImage = ZEROED;
 	checkerImage.data = checkerImageData.pixels;
 	checkerImage.width = checkerImageData.size.Width;
@@ -64,6 +68,16 @@ int main()
 	checkerImage.mipmaps = 1; //aka no mipmaps
 	checkerImage.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8;
 	Texture2D checkerTexture = LoadTextureFromImage(checkerImage);
+	#endif
+	
+	OsDll gameDll;
+	FilePath dllPath = StrLit(PROJECT_DLL_NAME_STR ".dll");
+	Result loadDllResult = OsLoadDll(dllPath, &gameDll);
+	if (loadDllResult != Result_Success) { PrintLine_E("Failed to load \"%.*s\": %s", StrPrint(dllPath), GetResultStr(loadDllResult)); }
+	Assert(loadDllResult == Result_Success);
+	PrintLine_D("handle = %p", gameDll.handle);
+	
+	
 	
 	ScratchEnd(loadScratch);
 	
