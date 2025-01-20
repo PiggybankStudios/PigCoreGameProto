@@ -17,7 +17,7 @@ Description:
 #define _BUILD_CONFIG_H
 
 // Build .exe binaries for Windows platform
-#define BUILD_WINDOWS 0
+#define BUILD_WINDOWS 1
 // Build binaries for Linux platform(s)
 #define BUILD_LINUX   1
 
@@ -32,6 +32,9 @@ Description:
 #define BUILD_PIGGEN_IF_NEEDED  1
 // Generates code for all projects using piggen.exe (you can turn this off if you're not making changes to generated code and you've already generated it once)
 #define RUN_PIGGEN              0
+
+// This disables hot-reloading support, the platform and game are one unit. Also PigCore gets compiled in directly rather than being used as a dynamic library
+#define BUILD_INTO_SINGLE_UNIT  1
 
 // Compiles piggen/main.c to either dynamic or static library
 #define BUILD_PIG_CORE_LIB            1

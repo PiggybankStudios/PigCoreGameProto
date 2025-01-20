@@ -7,8 +7,9 @@ Description:
 	** that are needed for the game to build
 */
 
-#define PIG_CORE_IMPLEMENTATION 0
-#define BUILD_WITH_RAYLIB 0
+#include "build_config.h"
+#define PIG_CORE_IMPLEMENTATION BUILD_INTO_SINGLE_UNIT
+#define BUILD_WITH_RAYLIB TARGET_IS_WINDOWS
 
 #include "base/base_all.h"
 #include "std/std_all.h"
@@ -76,8 +77,10 @@ int main()
 	
 	#endif //BUILD_WITH_RAYLIB
 	
-	#if 1
-	OsDll gameDll;
+	#if BUILD_INTO_SINGLE_UNIT
+	WriteLine_N("Compiled as single unit!");
+	#else
+	
 	#if TARGET_IS_WINDOWS
 	FilePath dllPath = StrLit(PROJECT_DLL_NAME_STR ".dll");
 	#elif TARGET_IS_LINUX
@@ -85,12 +88,12 @@ int main()
 	#else
 	#error Current TARGET doesn't have an implementation for shared library suffix!
 	#endif
+	
+	OsDll gameDll;
 	Result loadDllResult = OsLoadDll(dllPath, &gameDll);
 	if (loadDllResult != Result_Success) { PrintLine_E("Failed to load \"%.*s\": %s", StrPrint(dllPath), GetResultStr(loadDllResult)); }
 	Assert(loadDllResult == Result_Success);
 	PrintLine_D("handle = %p", gameDll.handle);
-	#else
-	WriteLine_D("Not loading game_hot_reload shared library (for now)");
 	#endif
 	
 	ScratchEnd(loadScratch);
@@ -128,3 +131,7 @@ int main()
 	
 	return 0;
 }
+
+#if BUILD_INTO_SINGLE_UNIT
+#include "game/game_main.c"
+#endif

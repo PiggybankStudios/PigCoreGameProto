@@ -38,7 +38,7 @@ void RaylibLogCallback(int logLevel, const char* text, va_list args)
 		formattedText = AllocArray(char, scratch, formattedTextLength+1);
 		if (formattedText != nullptr)
 		{
-			int secondPrintResult = MyVaListPrintf(formattedText, formattedTextLength+1, text, argsCopy);
+			MyVaListPrintf(formattedText, formattedTextLength+1, text, argsCopy);
 			formattedText[formattedTextLength] = '\0';
 		}
 	}

@@ -8,8 +8,9 @@ Description:
 	** required for the game to compile.
 */
 
-#define PIG_CORE_IMPLEMENTATION 0
-#define BUILD_WITH_RAYLIB 0
+#include "build_config.h"
+#define PIG_CORE_IMPLEMENTATION BUILD_INTO_SINGLE_UNIT
+#define BUILD_WITH_RAYLIB TARGET_IS_WINDOWS
 
 #include "base/base_all.h"
 #include "std/std_all.h"
@@ -26,13 +27,15 @@ Description:
 // +--------------------------------------------------------------+
 // |                           Globals                            |
 // +--------------------------------------------------------------+
+#if !BUILD_INTO_SINGLE_UNIT //NOTE: The platform layer already has this global
 static Arena stdHeapStruct = ZEROED;
 static Arena* stdHeap = nullptr;
+#endif
 
 // +--------------------------------------------------------------+
 // |                       Main Entry Point                       |
 // +--------------------------------------------------------------+
-#if TARGET_IS_WINDOWS
+#if (TARGET_IS_WINDOWS && !BUILD_INTO_SINGLE_UNIT)
 BOOL WINAPI DllMain(
 	HINSTANCE hinstDLL, // handle to DLL module
 	DWORD fdwReason,    // reason for calling function
@@ -59,4 +62,4 @@ BOOL WINAPI DllMain(
 	//If we don't return TRUE here then the LoadLibraryA call will return a failure!
 	return TRUE;
 }
-#endif
+#endif //(TARGET_IS_WINDOWS && !BUILD_INTO_SINGLE_UNIT)
