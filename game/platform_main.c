@@ -7,6 +7,7 @@ Description:
 	** that are needed for the game to build
 */
 
+#define PIG_CORE_IMPLEMENTATION 0
 #define BUILD_WITH_RAYLIB 1
 
 #include "base/base_all.h"

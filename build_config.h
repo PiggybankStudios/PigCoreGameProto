@@ -24,15 +24,28 @@ Description:
 // Debug builds often take less time to compile as well.
 #define DEBUG_BUILD   1
 
-// Compiles piggen/main.c
+// Compiles core/piggen/main.c
 #define BUILD_PIGGEN   0
+// Same as above but only compiles if piggen.exe doesn't already exist in the _build folder
+#define BUILD_PIGGEN_IF_NEEDED   1
 // Generates code for all projects using piggen.exe (you can turn this off if you're not making changes to generated code and you've already generated it once)
 #define RUN_PIGGEN     0
 
-// Compiles game/main.c
-#define BUILD_GAME   1
+// Compiles piggen/main.c to either dynamic or static library
+#define BUILD_PIG_CORE_LIB             1
+// Same as above but only compiles if the dll doesn't already exist in the _build folder
+#define BUILD_PIG_CORE_LIB_IF_NEEDED   1
+
+// Compiles game/platform_main.c to game.exe
+#define BUILD_GAME_EXE   1
+// Compiles game/game_main.c to game_hot_reload.dll
+#define BUILD_GAME_DLL   1
 // Runs the result of compiling game/main.c, aka the game.exe
 #define RUN_GAME     0
+
+// Copies the exe and dlls to the _data folder so they can be run alongside the resources folder more easily
+// Our debugger projects usually run the exe from the _build folder but with working directory set to the _data folder
+#define COPY_TO_DATA_DIRECTORY 1
 
 // Rather than compiling the project(s) it will simply output the
 // result of the preprocessor's pass over the code to the build folder

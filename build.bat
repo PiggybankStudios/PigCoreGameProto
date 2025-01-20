@@ -18,9 +18,14 @@ if errorlevel 1 (
 set extract_define=python %core%\_scripts\extract_define.py ../build_config.h
 for /f "delims=" %%i in ('%extract_define% DEBUG_BUILD') do set DEBUG_BUILD=%%i
 for /f "delims=" %%i in ('%extract_define% BUILD_PIGGEN') do set BUILD_PIGGEN=%%i
+for /f "delims=" %%i in ('%extract_define% BUILD_PIGGEN_IF_NEEDED') do set BUILD_PIGGEN_IF_NEEDED=%%i
 for /f "delims=" %%i in ('%extract_define% RUN_PIGGEN') do set RUN_PIGGEN=%%i
-for /f "delims=" %%i in ('%extract_define% BUILD_GAME') do set BUILD_GAME=%%i
+for /f "delims=" %%i in ('%extract_define% BUILD_PIG_CORE_LIB') do set BUILD_PIG_CORE_LIB=%%i
+for /f "delims=" %%i in ('%extract_define% BUILD_PIG_CORE_LIB_IF_NEEDED') do set BUILD_PIG_CORE_LIB_IF_NEEDED=%%i
+for /f "delims=" %%i in ('%extract_define% BUILD_GAME_EXE') do set BUILD_GAME_EXE=%%i
+for /f "delims=" %%i in ('%extract_define% BUILD_GAME_DLL') do set BUILD_GAME_DLL=%%i
 for /f "delims=" %%i in ('%extract_define% RUN_GAME') do set RUN_GAME=%%i
+for /f "delims=" %%i in ('%extract_define% COPY_TO_DATA_DIRECTORY') do set COPY_TO_DATA_DIRECTORY=%%i
 for /f "delims=" %%i in ('%extract_define% DUMP_PREPROCESSOR') do set DUMP_PREPROCESSOR=%%i
 for /f "delims=" %%i in ('%extract_define% BUILD_WINDOWS') do set BUILD_WINDOWS=%%i
 for /f "delims=" %%i in ('%extract_define% BUILD_LINUX') do set BUILD_LINUX=%%i
@@ -152,15 +157,26 @@ set piggen_exe_path=piggen.exe
 set piggen_bin_path=piggen
 set piggen_cl_args=%common_cl_flags% /Fe%piggen_exe_path% %piggen_source_path% /link %common_ld_flags%
 set piggen_clang_args=%common_clang_flags% %linux_clang_flags% -o %piggen_bin_path% ../%piggen_source_path%
+
+if "%BUILD_PIGGEN_IF_NEEDED%"=="1" (
+	if "%BUILD_WINDOWS%"=="1" (
+		if not exist %piggen_exe_path% (
+			set BUILD_PIGGEN=1
+		)
+	)
+	if "%BUILD_LINUX%"=="1" (
+		if not exist linux\%piggen_bin_path% (
+			set BUILD_PIGGEN=1
+		)
+	)
+)
+
 if "%BUILD_PIGGEN%"=="1" (
 	if "%BUILD_WINDOWS%"=="1" (
 		echo.
 		echo [Building piggen for Windows...]
 		del %piggen_exe_path% > NUL 2> NUL
 		cl %piggen_cl_args%
-		if "%DUMP_PREPROCESSOR%"=="1" (
-			COPY main.i piggen_preprocessed.i > NUL
-		)
 		echo [Built piggen for Windows!]
 	)
 	if "%BUILD_LINUX%"=="1" (
@@ -182,31 +198,77 @@ if "%RUN_PIGGEN%"=="1" (
 )
 
 :: +--------------------------------------------------------------+
+:: |                      Build pig_core.dll                      |
+:: +--------------------------------------------------------------+
+set pig_core_source_path=%core%/dll/dll_main.c
+set pig_core_dll_path=pig_core.dll
+set pig_core_lib_path=pig_core.lib
+set pig_core_so_path=libpig_core.so
+set pig_core_cl_args=%common_cl_flags% /DBUILD_WITH_RAYLIB=1 /Fe%pig_core_dll_path% %pig_core_source_path% /link %common_ld_flags% /DLL
+set pig_core_clang_args=%common_clang_flags% %linux_clang_flags% -shared -o %pig_core_so_path% ../%pig_core_source_path%
+
+if "%BUILD_PIG_CORE_LIB_IF_NEEDED%"=="1" (
+	if "%BUILD_WINDOWS%"=="1" (
+		if not exist %pig_core_dll_path% (
+			set BUILD_PIG_CORE_LIB=1
+		)
+	)
+	if "%BUILD_LINUX%"=="1" (
+		if not exist linux\%pig_core_so_path% (
+			set BUILD_PIG_CORE_LIB=1
+		)
+	)
+)
+
+if "%BUILD_PIG_CORE_LIB%"=="1" (
+	if "%BUILD_WINDOWS%"=="1" (
+		del %pig_core_dll_path% > NUL 2> NUL
+		del %pig_core_lib_path% > NUL 2> NUL
+		
+		echo.
+		echo [Building %pig_core_dll_path% for Windows...]
+		cl %pig_core_cl_args%
+		echo [Built %pig_core_dll_path% for Windows!]
+		
+		if "%COPY_TO_DATA_DIRECTORY%"=="1" (
+			COPY %pig_core_dll_path% %root%\_data\%pig_core_dll_path% > NUL
+		)
+	)
+	if "%BUILD_LINUX%"=="1" (
+		echo.
+		echo [Building %pig_core_so_path% for Linux...]
+		if not exist linux mkdir linux
+		pushd linux
+		
+		del %pig_core_so_path% > NUL 2> NUL
+		wsl clang-18 %pig_core_clang_args%
+		
+		popd
+		echo [Built %pig_core_so_path% for Linux!]
+	)
+)
+
+:: +--------------------------------------------------------------+
 :: |                        Build game.exe                        |
 :: +--------------------------------------------------------------+
 set platform_source_path=%game%/platform_main.c
-set game_source_path=%game%/game_main.c
 set game_exe_path=%PROJECT_EXE_NAME%.exe
-set game_dll_path=%PROJECT_DLL_NAME%.dll
 set game_bin_path=%PROJECT_EXE_NAME%
-set game_cl_args=%common_cl_flags% /Fe%game_exe_path% %platform_source_path% /link %common_ld_flags%
-set game_dll_cl_args=%common_cl_flags% /Fe%game_dll_path% %game_source_path% /link %common_ld_flags% /DLL
+set game_cl_args=%common_cl_flags% /Fe%game_exe_path% %platform_source_path% /link %common_ld_flags% %pig_core_lib_path%
 set game_clang_args=%common_clang_flags% %linux_clang_flags% -o %game_bin_path% ../%game_source_path%
-set game_dll_clang_args=TODO: Fill this out!
-	
-if "%BUILD_GAME%"=="1" (
+
+if "%BUILD_GAME_EXE%"=="1" (
 	if "%BUILD_WINDOWS%"=="1" (
 		del %game_exe_path% > NUL 2> NUL
-		del %game_dll_path% > NUL 2> NUL
 		
 		echo.
 		echo [Building %game_exe_path% for Windows...]
 		cl %game_cl_args%
 		echo [Built %game_exe_path% for Windows!]
 		
-		echo [Building %game_dll_path% for Windows...]
-		cl %game_dll_cl_args%
-		echo [Built %game_exe_path% for Windows!]
+		if "%COPY_TO_DATA_DIRECTORY%"=="1" (
+			COPY %game_exe_path% %root%\_data\%game_exe_path% > NUL
+		)
 	)
 	if "%BUILD_LINUX%"=="1" (
 		echo.
@@ -216,10 +278,42 @@ if "%BUILD_GAME%"=="1" (
 		
 		del %game_bin_path% > NUL 2> NUL
 		wsl clang-18 %game_clang_args%
-		wsl clang-18 %game_dll_clang_args%
 		
 		popd
 		echo [Built %game_bin_path% for Linux!]
+	)
+)
+
+set game_source_path=%game%/game_main.c
+set game_dll_path=%PROJECT_DLL_NAME%.dll
+set game_so_path=%PROJECT_DLL_NAME%.so
+set game_dll_cl_args=%common_cl_flags% /Fe%game_dll_path% %game_source_path% /link %common_ld_flags% %pig_core_lib_path% /DLL
+set game_dll_clang_args=TODO: Fill this out!
+
+if "%BUILD_GAME_DLL%"=="1" (
+	if "%BUILD_WINDOWS%"=="1" (
+		del %game_dll_path% > NUL 2> NUL
+		
+		echo.
+		echo [Building %game_dll_path% for Windows...]
+		cl %game_dll_cl_args%
+		echo [Built %game_dll_path% for Windows!]
+		
+		if "%COPY_TO_DATA_DIRECTORY%"=="1" (
+			COPY %game_dll_path% %root%\_data\%game_dll_path% > NUL
+		)
+	)
+	if "%BUILD_LINUX%"=="1" (
+		echo.
+		echo [Building %game_so_path% for Linux...]
+		if not exist linux mkdir linux
+		pushd linux
+		
+		del %game_so_path% > NUL 2> NUL
+		wsl clang-18 %game_dll_clang_args%
+		
+		popd
+		echo [Built %game_so_path% for Linux!]
 	)
 )
 

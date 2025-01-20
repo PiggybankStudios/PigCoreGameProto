@@ -98,6 +98,16 @@
 		],
 		"custom_constants":
 		[
+			"BUILDING_AS_DLL",
+			"BUILD_GAME_DLL",
+			"BUILD_GAME_EXE",
+			"BUILD_PIGGEN_IF_NEEDED",
+			"BUILD_PIG_CORE_LIB",
+			"BUILD_PIG_CORE_LIB_IF_NEEDED",
+			"COPY_TO_DATA_DIRECTORY",
+			"PIG_CORE_BUILDING_AS_DLL",
+			"PIG_CORE_IMPLEMENTATION",
+			"PIG_CORE_INLINE",
 		],
 		"custom_functions":
 		[
