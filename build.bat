@@ -119,7 +119,6 @@ if "%DEBUG_BUILD%"=="1" (
 :: -incremental:no = Suppresses warning about doing a full link when it can't find the previous .exe result. We don't need this when doing unity builds
 :: /LIBPATH = Add a library search path
 set common_ld_flags=-incremental:no
-:: raylibdll.lib   = ?
 :: gdi32.lib    = ?
 :: User32.lib   = ?
 :: Shell32.lib  = Shlobj.h ? 
@@ -129,8 +128,14 @@ set common_ld_flags=-incremental:no
 :: Shlwapi.lib  = ?
 :: Ole32.lib    = Combaseapi.h, CoCreateInstance
 :: Advapi32.lib = Processthreadsapi.h, OpenProcessToken, GetTokenInformation
-set common_ld_flags=%common_ld_flags% raylibdll.lib gdi32.lib User32.lib Shell32.lib kernel32.lib winmm.lib
+set common_ld_flags=%common_ld_flags% gdi32.lib User32.lib Shell32.lib kernel32.lib winmm.lib
 :: TODO:: Compiling for Linux with raylib would require following instructions here: https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux
+
+if "%BUILD_INTO_SINGLE_UNIT%"=="1" (
+	set common_ld_flags=%common_ld_flags% raylib.lib
+) else (
+	set common_ld_flags=%common_ld_flags% raylibdll.lib
+)
 
 if "%DEBUG_BUILD%"=="1" (
 	set common_ld_flags=%common_ld_flags% /LIBPATH:"%root%\third_party\_lib_debug" /LIBPATH:"%core%\third_party\_lib_debug"
