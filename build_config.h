@@ -19,7 +19,7 @@ Description:
 // Build .exe binaries for Windows platform
 #define BUILD_WINDOWS 1
 // Build binaries for Linux platform(s)
-#define BUILD_LINUX   1
+#define BUILD_LINUX   0
 
 // Controls whether we are making a build that we want to run with a Debugger.
 // This often sacrifices runtime speed or code size for extra debug information.
@@ -27,14 +27,14 @@ Description:
 #define DEBUG_BUILD  1
 
 // Compiles core/piggen/main.c
-#define BUILD_PIGGEN            0
+#define BUILD_PIGGEN            1
 // Same as above but only compiles if piggen.exe doesn't already exist in the _build folder
 #define BUILD_PIGGEN_IF_NEEDED  1
 // Generates code for all projects using piggen.exe (you can turn this off if you're not making changes to generated code and you've already generated it once)
 #define RUN_PIGGEN              0
 
 // This disables hot-reloading support, the platform and game are one unit. Also PigCore gets compiled in directly rather than being used as a dynamic library
-#define BUILD_INTO_SINGLE_UNIT  1
+#define BUILD_INTO_SINGLE_UNIT  0
 
 // Compiles piggen/main.c to either dynamic or static library
 #define BUILD_PIG_CORE_LIB            1

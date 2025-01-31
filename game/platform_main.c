@@ -127,7 +127,7 @@ int main()
 	}
 	
 	#if !BUILD_INTO_SINGLE_UNIT
-	CloseWindow(); NOTE: Apparently this breaks because it conflicts with some dll from Windows when we compile into a single binary
+	CloseWindow(); //NOTE: Apparently this breaks because it conflicts with some dll from Windows when we compile into a single binary
 	#endif
 	#endif //BUILD_WITH_RAYLIB
 	
